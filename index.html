@@ -1180,6 +1180,7 @@ nav.scrolled{background:rgba(7,7,10,.97)!important;box-shadow:0 2px 24px rgba(0,
   <a href="#blog" onclick="closeMob()">✍️ Blog</a>
   <a href="#certificates" onclick="closeMob()">🏆 Certificates</a>
   <a href="#contact" onclick="closeMob()">📬 Contact</a>
+  <a href="#" onclick="closeMob();showEduTech();" style="color:var(--ac);font-weight:700;">🎓 EduTech</a>
   <a href="#" onclick="closeMob();showAdmin()" style="color:var(--muted);font-size:13px;">⚙️ Admin Panel</a>
   <div class="mob-divider"></div>
   <div class="mob-btns">
@@ -1205,6 +1206,7 @@ nav.scrolled{background:rgba(7,7,10,.97)!important;box-shadow:0 2px 24px rgba(0,
     <li><a href="#blog">Blog</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="#" onclick="showEduTech();return false;" style="color:var(--ac);font-weight:700;">🎓 EduTech</a></li>
   </ul>
   <div class="nav-r">
     <div class="owbadge">Accepting Clients</div>
@@ -3919,6 +3921,264 @@ function renderNotes(){
   });
 }
 
+// ── YOUTUBE LIVE SUBSCRIBER COUNT ──────────────────────────
+// Replace YOUR_API_KEY below with your YouTube Data API v3 key
+// Get it free from: https://console.cloud.google.com → APIs → YouTube Data API v3
+var YT_API_KEY = 'YOUR_API_KEY';
+var YT_CHANNEL_HANDLE = 'AnilEduTechYT';
+
+function formatSubCount(n){
+  n = parseInt(n);
+  if(n >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + 'M';
+  if(n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+  return n.toString();
+}
+
+function fetchYTSubs(){
+  var el = document.getElementById('ytSubCount');
+  if(!el) return;
+  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY'){
+    el.textContent = '—';
+    return;
+  }
+  fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics&forHandle='+YT_CHANNEL_HANDLE+'&key='+YT_API_KEY)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var count = data && data.items && data.items[0] && data.items[0].statistics && data.items[0].statistics.subscriberCount;
+      if(count){
+        el.style.fontSize = '';
+        el.textContent = formatSubCount(count);
+      } else {
+        el.textContent = '—';
+      }
+    })
+    .catch(function(){ el.textContent = '—'; });
+}
+
+// ── EDUTECH FUNCTIONS ──────────────────────────────────────
+function showEduTech(){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('edutechPage').classList.add('active');
+  window.scrollTo(0,0);
+  fetchYTSubs();
+}
+function hideEduTech(){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('portfolioPage').classList.add('active');
+  window.scrollTo(0,0);
+}
+function showEduSection(sec){
+  // hide home content
+  var homeEl = document.getElementById('edu-home-content');
+  if(homeEl) homeEl.style.display = sec==='home' ? 'block' : 'none';
+  // hide all sub-sections
+  var sections=['videos','tools','quiz','resources','tech'];
+  sections.forEach(function(s){
+    var el=document.getElementById('edu-'+s);
+    if(el){el.style.display='none';}
+  });
+  if(sec!=='home'){
+    var target=document.getElementById('edu-'+sec);
+    if(target){
+      target.style.display='block';
+      window.scrollTo(0,0);
+      if(sec==='tools') initSdtMode();
+      if(sec==='quiz') initQuiz();
+    }
+  }
+}
+
+// ── CALCULATOR ──
+function calcEval(){
+  var el=document.getElementById('calcResult');
+  try{
+    var expr=document.getElementById('calcInput').value;
+    var result=Function('"use strict";return ('+expr+')')();
+    el.style.display='flex';
+    el.textContent='= '+result;
+  }catch(e){
+    el.style.display='flex';
+    el.textContent='⚠️ Invalid expression!';
+  }
+}
+
+// ── PERCENTAGE ──
+function calcPct(){
+  var el=document.getElementById('pctResult');
+  var val=parseFloat(document.getElementById('pVal').value);
+  var pct=parseFloat(document.getElementById('pPct').value);
+  el.style.display='flex';
+  if(isNaN(val)||isNaN(pct)){el.textContent='⚠️ Values enter చేయండి!';return;}
+  var result=(val*pct/100).toFixed(2);
+  el.textContent=pct+'% of '+val+' = ₹'+result;
+}
+
+// ── SIMPLE INTEREST ──
+function calcSI(){
+  var el=document.getElementById('siResult');
+  var P=parseFloat(document.getElementById('siP').value);
+  var R=parseFloat(document.getElementById('siR').value);
+  var T=parseFloat(document.getElementById('siT').value);
+  el.style.display='flex';
+  if(isNaN(P)||isNaN(R)||isNaN(T)){el.textContent='⚠️ Values enter చేయండి!';return;}
+  var SI=(P*R*T/100).toFixed(2);
+  var total=(P+parseFloat(SI)).toFixed(2);
+  el.innerHTML='SI = ₹'+SI+' &nbsp;|&nbsp; Total Amount = ₹'+total;
+}
+
+// ── COMPOUND INTEREST ──
+function calcCI(){
+  var el=document.getElementById('ciResult');
+  var P=parseFloat(document.getElementById('ciP').value);
+  var R=parseFloat(document.getElementById('ciR').value);
+  var T=parseFloat(document.getElementById('ciT').value);
+  el.style.display='flex';
+  if(isNaN(P)||isNaN(R)||isNaN(T)){el.textContent='⚠️ Values enter చేయండి!';return;}
+  var A=P*Math.pow(1+R/100,T);
+  var CI=A-P;
+  el.innerHTML='CI = ₹'+CI.toFixed(2)+' &nbsp;|&nbsp; Total Amount = ₹'+A.toFixed(2);
+}
+
+// ── SPEED / DISTANCE / TIME ──
+var _sdtMode='speed';
+function setSdtMode(mode,btn){
+  _sdtMode=mode;
+  document.querySelectorAll('#edu-tools .edu-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  initSdtMode();
+  document.getElementById('sdtResult').style.display='none';
+}
+function initSdtMode(){
+  var c=document.getElementById('sdtInputs');
+  if(!c) return;
+  if(_sdtMode==='speed'){
+    c.innerHTML='<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Distance (km)</label><input id="sdtD" type="number" class="edu-inp" placeholder="150"></div><div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Time (hours)</label><input id="sdtT" type="number" class="edu-inp" placeholder="3"></div>';
+  } else if(_sdtMode==='dist'){
+    c.innerHTML='<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Speed (km/h)</label><input id="sdtS" type="number" class="edu-inp" placeholder="60"></div><div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Time (hours)</label><input id="sdtT" type="number" class="edu-inp" placeholder="3"></div>';
+  } else {
+    c.innerHTML='<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Distance (km)</label><input id="sdtD" type="number" class="edu-inp" placeholder="150"></div><div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Speed (km/h)</label><input id="sdtS" type="number" class="edu-inp" placeholder="50"></div>';
+  }
+}
+function calcSDT(){
+  var el=document.getElementById('sdtResult');
+  el.style.display='flex';
+  if(_sdtMode==='speed'){
+    var D=parseFloat((document.getElementById('sdtD')||{}).value);
+    var T=parseFloat((document.getElementById('sdtT')||{}).value);
+    if(isNaN(D)||isNaN(T)){el.textContent='⚠️ Values enter చేయండి!';return;}
+    el.textContent='Speed = '+( D/T ).toFixed(2)+' km/h';
+  } else if(_sdtMode==='dist'){
+    var S=parseFloat((document.getElementById('sdtS')||{}).value);
+    var T=parseFloat((document.getElementById('sdtT')||{}).value);
+    if(isNaN(S)||isNaN(T)){el.textContent='⚠️ Values enter చేయండి!';return;}
+    el.textContent='Distance = '+(S*T).toFixed(2)+' km';
+  } else {
+    var D=parseFloat((document.getElementById('sdtD')||{}).value);
+    var S=parseFloat((document.getElementById('sdtS')||{}).value);
+    if(isNaN(D)||isNaN(S)){el.textContent='⚠️ Values enter చేయండి!';return;}
+    el.textContent='Time = '+(D/S).toFixed(2)+' hours';
+  }
+}
+
+// ── VIDEO FILTER ──
+function filterVids(cat){
+  document.querySelectorAll('.edu-tab[id^="vtab"]').forEach(function(b){b.classList.remove('active');});
+  var tb=document.getElementById('vtab-'+cat);
+  if(tb) tb.classList.add('active');
+  document.querySelectorAll('.edu-vid-card').forEach(function(c){
+    c.style.display=(cat==='all'||c.dataset.cat===cat)?'':'none';
+  });
+}
+
+// ── QUIZ ──
+var _quizData=[
+  {q:'25 × 4 = ?', opts:['90','100','95','110'], ans:1, cat:'Maths'},
+  {q:'15% of 200 = ?', opts:['25','30','35','40'], ans:1, cat:'Maths'},
+  {q:'√144 = ?', opts:['10','11','12','13'], ans:2, cat:'Maths'},
+  {q:'SI formula అంటే?', opts:['P+R+T','PRT/100','P×R/T','P/(R×T)'], ans:1, cat:'Maths'},
+  {q:'India capital ఏది?', opts:['Mumbai','Kolkata','New Delhi','Chennai'], ans:2, cat:'GK'},
+  {q:'HTML full form?', opts:['Hyper Transfer Markup Language','HyperText Markup Language','High Text Markup Language','None'], ans:1, cat:'Tech'},
+  {q:'60 km/h speed లో 3 గంటల్లో distance?', opts:['120 km','150 km','180 km','200 km'], ans:2, cat:'Maths'},
+  {q:'CSS లో color ఎలా set చేస్తారు?', opts:['color: red;','font: red;','bg: red;','style: red;'], ans:0, cat:'Tech'},
+  {q:'India independence year?', opts:['1945','1946','1947','1948'], ans:2, cat:'GK'},
+  {q:'9² = ?', opts:['72','81','90','63'], ans:1, cat:'Maths'},
+];
+var _quizIdx=0, _quizScore=0, _quizAnswered=false;
+
+function initQuiz(){
+  _quizIdx=0; _quizScore=0; _quizAnswered=false;
+  renderQuiz();
+}
+
+function renderQuiz(){
+  var c=document.getElementById('quizContainer');
+  if(!c) return;
+  if(_quizIdx>=_quizData.length){
+    var pct=Math.round((_quizScore/_quizData.length)*100);
+    var emoji=pct>=80?'🏆':pct>=60?'👍':'📚';
+    c.innerHTML='<div style="background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:40px;text-align:center;">'
+      +'<div style="font-size:64px;margin-bottom:16px;">'+emoji+'</div>'
+      +'<h3 style="font-family:\'Syne\',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px;">Quiz Complete!</h3>'
+      +'<div style="font-size:48px;font-weight:800;font-family:\'Syne\',sans-serif;color:var(--ac);margin:16px 0;">'+_quizScore+'/'+_quizData.length+'</div>'
+      +'<p style="color:var(--muted);margin-bottom:8px;">Score: '+pct+'%</p>'
+      +'<p style="color:var(--muted);margin-bottom:28px;font-size:14px;">'+(pct>=80?'Excellent! చాలా బాగా చేశావు! 🌟':pct>=60?'Good job! ఇంకొంచెం practice చేయి!':'Keep practicing! Anil EduTech watch చేయి!')+'</p>'
+      +'<button class="edu-btn" onclick="initQuiz()" style="margin-right:10px;">🔄 Again Play</button>'
+      +'<button class="edu-btn" onclick="showEduSection(\'home\')" style="background:var(--card);color:var(--text);border:1px solid var(--b2);">🏠 Home</button>'
+      +'</div>';
+    return;
+  }
+  var q=_quizData[_quizIdx];
+  _quizAnswered=false;
+  c.innerHTML='<div style="background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:32px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">'
+    +'<span style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;">'+q.cat+' • Question '+(_quizIdx+1)+' of '+_quizData.length+'</span>'
+    +'<span style="font-family:\'Syne\',sans-serif;font-weight:700;color:var(--grn);">Score: '+_quizScore+'</span>'
+    +'</div>'
+    +'<div style="background:var(--ibg);border-radius:8px;height:4px;margin-bottom:24px;overflow:hidden;">'
+    +'<div style="background:var(--ac);height:100%;width:'+((_quizIdx/_quizData.length)*100)+'%;transition:width .5s;"></div></div>'
+    +'<h3 style="font-family:\'Syne\',sans-serif;font-size:20px;font-weight:700;margin-bottom:24px;line-height:1.4;">'+q.q+'</h3>'
+    +'<div id="quizOpts">'
+    +q.opts.map(function(o,i){
+      return '<button class="quiz-opt" onclick="answerQuiz('+i+')">'+String.fromCharCode(65+i)+'. '+o+'</button>';
+    }).join('')
+    +'</div>'
+    +'<div id="quizFeedback" style="display:none;margin-top:16px;padding:14px 16px;border-radius:10px;font-weight:600;font-size:14px;"></div>'
+    +'<button id="quizNext" onclick="nextQuestion()" style="display:none;margin-top:16px;" class="edu-btn">Next Question →</button>'
+    +'</div>';
+}
+
+function answerQuiz(idx){
+  if(_quizAnswered) return;
+  _quizAnswered=true;
+  var q=_quizData[_quizIdx];
+  var opts=document.querySelectorAll('.quiz-opt');
+  var fb=document.getElementById('quizFeedback');
+  var nxt=document.getElementById('quizNext');
+  opts.forEach(function(o,i){
+    o.disabled=true;
+    if(i===q.ans) o.classList.add('correct');
+    else if(i===idx) o.classList.add('wrong');
+  });
+  if(idx===q.ans){
+    _quizScore++;
+    fb.style.display='block';
+    fb.style.background='rgba(74,222,128,.12)';
+    fb.style.color='var(--grn)';
+    fb.textContent='✅ Correct! చాలా బాగా!';
+  } else {
+    fb.style.display='block';
+    fb.style.background='rgba(255,83,112,.12)';
+    fb.style.color='var(--red)';
+    fb.textContent='❌ Wrong! Correct answer: '+String.fromCharCode(65+q.ans)+'. '+q.opts[q.ans];
+  }
+  nxt.style.display='inline-flex';
+}
+
+function nextQuestion(){
+  _quizIdx++;
+  renderQuiz();
+}
+
 function saveDashNote(){
   var v = (document.getElementById('dash-quick-note')||{}).value||'';
   localStorage.setItem('adm_dash_note', v);
@@ -4024,5 +4284,680 @@ function resetContactForm(){
   document.getElementById('cf-msg').value   = '';
 }
 </script>
+<!-- ===== EDUTECH PAGE ===== -->
+<style>
+.edu-nav-link{color:var(--muted);font-size:13px;font-weight:500;transition:color .3s;padding:6px 10px;border-radius:6px;}
+.edu-nav-link:hover{color:var(--text);background:var(--card);}
+.edu-stat-card{background:var(--card);border:1px solid var(--b2);border-radius:14px;padding:20px 24px;text-align:center;position:relative;overflow:hidden;}
+.edu-stat-card::before{content:'';position:absolute;inset:0;opacity:.05;background:var(--edu-c,var(--ac));}
+.edu-stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--edu-c,var(--ac));}
+.edu-stat-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.edu-card{background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:28px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.edu-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px var(--sh);}
+.edu-card:hover{border-color:var(--edu-c,var(--ac));}
+.edu-vid-card{background:var(--card);border:1px solid var(--b2);border-radius:14px;overflow:hidden;transition:all .3s;}
+.edu-vid-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px var(--sh);}
+.edu-vid-thumb{position:relative;background:linear-gradient(135deg,rgba(255,0,0,.12),rgba(124,111,255,.1));padding:0;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.edu-play-btn{width:54px;height:54px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.edu-vid-card:hover .edu-play-btn{transform:scale(1.12);}
+.edu-topic-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:40px;font-size:10px;font-weight:600;letter-spacing:.5px;}
+.edu-tool-box{background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:26px;margin-bottom:18px;}
+.edu-tool-box h3{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.edu-inp{width:100%;padding:10px 13px;background:var(--ibg);border:1px solid var(--b2);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;outline:none;transition:border-color .3s;box-sizing:border-box;}
+.edu-inp:focus{border-color:var(--ac);}
+.edu-btn{padding:11px 22px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;transition:all .3s;font-family:'Space Grotesk',sans-serif;}
+.edu-btn:hover{background:#6a5fe0;transform:translateY(-1px);}
+.edu-result{margin-top:14px;padding:14px 16px;background:rgba(124,111,255,.07);border:1px solid rgba(124,111,255,.15);border-radius:10px;font-size:15px;font-weight:700;color:var(--ac);min-height:50px;display:flex;align-items:center;}
+.edu-formula-card{background:var(--ibg);border-radius:10px;padding:16px;border:1px solid var(--b2);transition:all .3s;}
+.edu-formula-card:hover{border-color:var(--ac);background:rgba(124,111,255,.05);}
+.edu-formula-lbl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.edu-formula-val{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.edu-res-card{background:var(--card);border:1px solid var(--b2);border-radius:14px;padding:24px;transition:all .3s;position:relative;overflow:hidden;}
+.edu-res-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px var(--sh);}
+.edu-res-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--edu-c,var(--ac));}
+.quiz-opt{width:100%;padding:12px 16px;background:var(--ibg);border:1px solid var(--b2);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;text-align:left;cursor:pointer;transition:all .3s;margin-bottom:8px;}
+.quiz-opt:hover{border-color:var(--ac);background:rgba(124,111,255,.07);}
+.quiz-opt.correct{background:rgba(74,222,128,.12);border-color:var(--grn);color:var(--grn);}
+.quiz-opt.wrong{background:rgba(255,83,112,.12);border-color:var(--red);color:var(--red);}
+.edu-roadmap-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--b2);}
+.edu-roadmap-step:last-child{border-bottom:none;}
+.edu-roadmap-num{width:32px;height:32px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:13px;flex-shrink:0;}
+.edu-back-btn{margin-bottom:24px;padding:8px 18px;background:var(--card);border:1px solid var(--b2);color:var(--muted);border-radius:8px;cursor:pointer;font-size:13px;transition:all .3s;font-family:'Space Grotesk',sans-serif;}
+.edu-back-btn:hover{border-color:var(--ac);color:var(--ac);}
+@keyframes eduFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.edu-ani{animation:eduFadeIn .5s ease both;}
+.edu-subscribe-box{background:linear-gradient(135deg,rgba(255,0,0,.1),rgba(124,111,255,.1));border:1px solid rgba(255,0,0,.2);border-radius:20px;padding:48px;text-align:center;margin:40px 0 0;}
+.edu-tab{padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--b2);background:transparent;color:var(--muted);cursor:pointer;transition:all .3s;font-family:'Space Grotesk',sans-serif;}
+.edu-tab.active{background:var(--ac);color:#fff;border-color:var(--ac);}
+</style>
+
+<div class="page" id="edutechPage" style="min-height:100vh;background:var(--bg);padding-top:70px;">
+<nav style="position:fixed;top:0;left:0;right:0;z-index:9990;padding:13px 50px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,7,10,.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--b2);">
+  <div class="logo" style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:18px;">🎓</span> ANIL EDUTECH
+  </div>
+  <ul class="nav-links" style="display:flex;gap:4px;list-style:none;">
+    <li><a href="#" class="edu-nav-link" onclick="showEduSection('videos');return false;">📺 Videos</a></li>
+    <li><a href="#" class="edu-nav-link" onclick="showEduSection('tools');return false;">🧮 Math Tools</a></li>
+    <li><a href="#" class="edu-nav-link" onclick="showEduSection('quiz');return false;">🎯 Quiz</a></li>
+    <li><a href="#" class="edu-nav-link" onclick="showEduSection('resources');return false;">📚 Resources</a></li>
+    <li><a href="#" class="edu-nav-link" onclick="showEduSection('tech');return false;">💻 Tech</a></li>
+  </ul>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(255,0,0,.12);border:1px solid rgba(255,0,0,.25);color:#ff4444;text-decoration:none;display:flex;align-items:center;gap:5px;">▶ Subscribe</a>
+    <button onclick="hideEduTech()" style="padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--b2);background:var(--card);color:var(--muted);cursor:pointer;transition:all .3s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--muted)'">← Portfolio</button>
+  </div>
+</nav>
+
+<!-- ══ EDUTECH HOME ══ -->
+<div id="edu-home-content">
+
+<!-- Hero -->
+<div style="padding:70px 50px 50px;text-align:center;position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(124,111,255,.1) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;"></div>
+  <div style="position:absolute;top:-80px;right:-60px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,0,0,.06),transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-40px;left:40px;width:300px;height:300px;background:radial-gradient(circle,rgba(124,111,255,.08),transparent 70%);pointer-events:none;"></div>
+
+  <div style="display:inline-flex;align-items:center;gap:9px;padding:6px 16px;background:var(--card);border:1px solid var(--bdr);border-radius:40px;color:var(--muted);font-size:11px;letter-spacing:1.5px;margin-bottom:24px;position:relative;">
+    <span style="width:6px;height:6px;background:#ff4444;border-radius:50%;animation:bl 2s infinite;display:inline-block;"></span>
+    🎓 <span style="color:var(--ac);font-weight:600;">Anil EduTech</span> — Learn · Practice · Grow
+  </div>
+
+  <h1 style="font-family:'Syne',sans-serif;font-size:clamp(36px,7vw,82px);font-weight:800;letter-spacing:-3px;line-height:.95;margin-bottom:20px;position:relative;">
+    Free Education<br>
+    <span style="background:linear-gradient(135deg,#ff4444,#ff6b9d,var(--ac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">For Everyone</span>
+  </h1>
+  <p style="color:var(--muted);font-size:16px;max-width:520px;margin:0 auto 36px;line-height:1.9;position:relative;">
+    Maths · Arithmetic · Tech Tutorials · Competitive Exam Prep<br>
+    <strong style="color:var(--text);">అన్నీ free గా నేర్చుకోండి!</strong>
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;">
+    <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:#ff0000;color:#fff;font-weight:700;font-size:14px;border-radius:9px;text-decoration:none;transition:all .3s;box-shadow:0 8px 28px rgba(255,0,0,.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 36px rgba(255,0,0,.45)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 28px rgba(255,0,0,.3)'">▶ YouTube Subscribe చేయండి</a>
+    <button onclick="showEduSection('quiz')" style="display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:var(--card);color:var(--text);font-weight:600;font-size:14px;border-radius:9px;border:1px solid var(--b2);cursor:pointer;transition:all .3s;font-family:'Space Grotesk',sans-serif;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--text)'">🎯 Quiz చేయండి</button>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div style="padding:0 50px 50px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:900px;margin:0 auto;">
+    <div class="edu-stat-card" style="--edu-c:#ff4444;">
+      <div class="edu-stat-num" id="ytSubCount" style="font-size:22px;">...</div>
+      <div class="edu-stat-lbl">Subscribers</div>
+    </div>
+    <div class="edu-stat-card" style="--edu-c:var(--ac);">
+      <div class="edu-stat-num">50+</div>
+      <div class="edu-stat-lbl">Videos</div>
+    </div>
+    <div class="edu-stat-card" style="--edu-c:var(--grn);">
+      <div class="edu-stat-num">100%</div>
+      <div class="edu-stat-lbl">Free Content</div>
+    </div>
+    <div class="edu-stat-card" style="--edu-c:var(--ac2);">
+      <div class="edu-stat-num">3+</div>
+      <div class="edu-stat-lbl">Topics</div>
+    </div>
+    <div class="edu-stat-card" style="--edu-c:var(--ylw);">
+      <div class="edu-stat-num">Telugu</div>
+      <div class="edu-stat-lbl">Medium</div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Cards -->
+<div style="padding:0 50px 60px;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--ac);font-weight:600;margin-bottom:8px;">EXPLORE</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,38px);font-weight:800;letter-spacing:-1px;">ఏం నేర్చుకోవాలి?</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:1100px;margin:0 auto;">
+
+    <div class="edu-card" style="--edu-c:#ff4444;" onclick="showEduSection('videos')">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff0000,#ff6b9d);"></div>
+      <div style="font-size:40px;margin-bottom:16px;">📺</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">YouTube Videos</h3>
+        <span style="padding:2px 9px;background:rgba(255,0,0,.12);color:#ff4444;border-radius:40px;font-size:9px;font-weight:700;letter-spacing:1px;">LIVE</span>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Maths shortcuts, Tech tutorials & Vlogs — Telugu లో నేర్చుకోండి!</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">50+ videos</span>
+        <span style="color:#ff4444;font-size:12px;font-weight:700;">Watch Now →</span>
+      </div>
+    </div>
+
+    <div class="edu-card" style="--edu-c:var(--ac);" onclick="showEduSection('tools')">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2));"></div>
+      <div style="font-size:40px;margin-bottom:16px;">🧮</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">Math Tools</h3>
+        <span style="padding:2px 9px;background:rgba(124,111,255,.12);color:var(--ac);border-radius:40px;font-size:9px;font-weight:700;letter-spacing:1px;">FREE</span>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Calculator, SI/CI, Percentage, Speed — instant results!</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">5 tools</span>
+        <span style="color:var(--ac);font-size:12px;font-weight:700;">Open Tools →</span>
+      </div>
+    </div>
+
+    <div class="edu-card" style="--edu-c:#fbbf24;" onclick="showEduSection('quiz')">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b);"></div>
+      <div style="font-size:40px;margin-bottom:16px;">🎯</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">Daily Quiz</h3>
+        <span style="padding:2px 9px;background:rgba(251,191,36,.12);color:var(--ylw);border-radius:40px;font-size:9px;font-weight:700;letter-spacing:1px;">NEW</span>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Maths & GK questions — రోజూ practice చేయండి!</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">10 questions</span>
+        <span style="color:var(--ylw);font-size:12px;font-weight:700;">Start Quiz →</span>
+      </div>
+    </div>
+
+    <div class="edu-card" style="--edu-c:var(--grn);" onclick="showEduSection('resources')">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--grn),var(--ac));"></div>
+      <div style="font-size:40px;margin-bottom:16px;">📚</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">Study Resources</h3>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Shortcuts, notes, exam tips — competitive exams కోసం!</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">Maths · GK · Reasoning</span>
+        <span style="color:var(--grn);font-size:12px;font-weight:700;">View →</span>
+      </div>
+    </div>
+
+    <div class="edu-card" style="--edu-c:#60a5fa;" onclick="showEduSection('tech')">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#60a5fa,var(--ac));"></div>
+      <div style="font-size:40px;margin-bottom:16px;">💻</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">Tech Tutorials</h3>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">HTML, CSS, JS, React — zero to hero roadmap!</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">5 topics</span>
+        <span style="color:#60a5fa;font-size:12px;font-weight:700;">Learn Tech →</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Subscribe CTA -->
+<div style="padding:0 50px 80px;">
+  <div class="edu-subscribe-box" style="max-width:1100px;margin:0 auto;">
+    <div style="font-size:48px;margin-bottom:16px;">🎬</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,42px);font-weight:800;letter-spacing:-1px;margin-bottom:12px;">Anil EduTech YouTube Channel</h2>
+    <p style="color:var(--muted);font-size:15px;max-width:480px;margin:0 auto 28px;line-height:1.8;">Maths shortcuts, Tech tutorials, Vlogs — అన్నీ Telugu లో, completely free!</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:#ff0000;color:#fff;font-weight:700;font-size:14px;border-radius:9px;text-decoration:none;transition:all .3s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">▶ Subscribe చేయండి</a>
+      <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:rgba(255,255,255,.06);color:var(--text);font-weight:600;font-size:14px;border-radius:9px;text-decoration:none;border:1px solid var(--b2);transition:all .3s;" onmouseover="this.style.borderColor='var(--ac)'" onmouseout="this.style.borderColor='var(--b2)'">🔔 Videos చూడండి</a>
+    </div>
+  </div>
+</div>
+
+</div><!-- end edu-home-content -->
+
+<!-- Sub Sections -->
+
+<!-- VIDEOS SECTION -->
+<div id="edu-videos" style="display:none;padding:20px 50px 60px;" class="edu-ani">
+  <div style="max-width:1100px;margin:0 auto;">
+    <button class="edu-back-btn" onclick="showEduSection('home')">← Back</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">📺 Latest Videos</h2>
+        <p style="color:var(--muted);font-size:14px;">Anil EduTech YouTube channel — Telugu లో నేర్చుకోండి</p>
+      </div>
+      <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:#ff0000;color:#fff;font-weight:700;font-size:13px;border-radius:8px;text-decoration:none;">▶ Channel Visit చేయండి</a>
+    </div>
+
+    <!-- Video Category Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;">
+      <button class="edu-tab active" id="vtab-all" onclick="filterVids('all')">All Videos</button>
+      <button class="edu-tab" id="vtab-maths" onclick="filterVids('maths')">🔢 Maths</button>
+      <button class="edu-tab" id="vtab-tech" onclick="filterVids('tech')">💻 Tech</button>
+      <button class="edu-tab" id="vtab-vlog" onclick="filterVids('vlog')">🎬 Vlog</button>
+    </div>
+
+    <div id="vid-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+
+      <div class="edu-vid-card" data-cat="maths">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#1a0a0a,#2d0808);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">🔢</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">MATHS</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+            <span class="edu-topic-badge" style="background:rgba(255,0,0,.1);color:#ff4444;">📺 Maths Shortcuts</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">Multiplication Tricks | Fast Calculation</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">Competitive exams లో fast గా solve చేయడానికి easy tricks!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+      <div class="edu-vid-card" data-cat="maths">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#0a0a1a,#080820);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">📊</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">MATHS</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <span class="edu-topic-badge" style="background:rgba(255,0,0,.1);color:#ff4444;">📺 Percentages</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">Percentage Shortcuts | Exam Tricks</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">10%, 20%, 25% — instant calculation methods Telugu లో!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+      <div class="edu-vid-card" data-cat="tech">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#0a0814,#140828);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">💻</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">TECH</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <span class="edu-topic-badge" style="background:rgba(124,111,255,.1);color:var(--ac);">💻 Web Design</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">HTML Basics for Beginners | Telugu</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">Website create చేయడం ఎలా? — Zero to Hero guide!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+      <div class="edu-vid-card" data-cat="tech">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#0a0814,#140828);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">⚡</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">TECH</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <span class="edu-topic-badge" style="background:rgba(247,223,30,.1);color:#b8a800;">⚡ JavaScript</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">JavaScript Basics | Interactive Websites</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">Website కి life ఇవ్వండి — JS beginners guide Telugu!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+      <div class="edu-vid-card" data-cat="vlog">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#0a140a,#081408);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">🎬</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">VLOG</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <span class="edu-topic-badge" style="background:rgba(74,222,128,.1);color:var(--grn);">🎬 Vlog</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">Daily Life & Journey Vlog</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">Student life, coding journey — real experience share!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+      <div class="edu-vid-card" data-cat="maths">
+        <div class="edu-vid-thumb" style="background:linear-gradient(135deg,#140a0a,#1a0808);">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:42px;">💰</div>
+            <div class="edu-play-btn" style="background:#ff0000;">▶</div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:4px;font-size:10px;color:#fff;font-weight:600;">MATHS</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <span class="edu-topic-badge" style="background:rgba(255,0,0,.1);color:#ff4444;">📺 Interest</span>
+          </div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;font-size:15px;">Simple & Compound Interest | Tricks</h4>
+          <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px;">Bank exams, SSC, RRB కోసం SI & CI shortcuts!</p>
+          <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#ff0000;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ Watch Now</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center;margin-top:36px;">
+      <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:9px;padding:14px 30px;background:#ff0000;color:#fff;font-weight:700;font-size:14px;border-radius:9px;text-decoration:none;box-shadow:0 8px 24px rgba(255,0,0,.3);">▶ All Videos చూడండి — YouTube Channel</a>
+    </div>
+  </div>
+</div>
+
+<!-- MATH TOOLS SECTION -->
+<div id="edu-tools" style="display:none;padding:20px 50px 60px;" class="edu-ani">
+  <div style="max-width:860px;margin:0 auto;">
+    <button class="edu-back-btn" onclick="showEduSection('home')">← Back</button>
+    <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">🧮 Math Tools</h2>
+    <p style="color:var(--muted);margin-bottom:32px;font-size:14px;">Instant calculators — students, exam aspirants కోసం free tools</p>
+
+    <!-- Basic Calculator -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(124,111,255,.1);padding:6px 10px;border-radius:6px;">🔢</span> Basic Calculator</h3>
+      <input class="edu-inp" id="calcInput" type="text" placeholder="Example: 25 * 48 + 100 / 4" style="margin-bottom:12px;font-family:'JetBrains Mono',monospace;font-size:14px;">
+      <button class="edu-btn" onclick="calcEval()">Calculate =</button>
+      <div class="edu-result" id="calcResult" style="display:none;"></div>
+    </div>
+
+    <!-- Percentage Calculator -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(124,111,255,.1);padding:6px 10px;border-radius:6px;">📊</span> Percentage Calculator</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">Value</label><input id="pVal" type="number" class="edu-inp" placeholder="200"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">Percentage %</label><input id="pPct" type="number" class="edu-inp" placeholder="25"></div>
+      </div>
+      <button class="edu-btn" onclick="calcPct()">Calculate %</button>
+      <div class="edu-result" id="pctResult" style="display:none;"></div>
+    </div>
+
+    <!-- Simple Interest Calculator -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(74,222,128,.1);padding:6px 10px;border-radius:6px;">💵</span> Simple Interest (SI)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Principal (₹)</label><input id="siP" type="number" class="edu-inp" placeholder="10000"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Rate (% p.a.)</label><input id="siR" type="number" class="edu-inp" placeholder="8"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Time (Years)</label><input id="siT" type="number" class="edu-inp" placeholder="3"></div>
+      </div>
+      <button class="edu-btn" onclick="calcSI()">Calculate SI</button>
+      <div class="edu-result" id="siResult" style="display:none;"></div>
+    </div>
+
+    <!-- Compound Interest Calculator -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(251,191,36,.1);padding:6px 10px;border-radius:6px;">📈</span> Compound Interest (CI)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Principal (₹)</label><input id="ciP" type="number" class="edu-inp" placeholder="10000"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Rate (% p.a.)</label><input id="ciR" type="number" class="edu-inp" placeholder="10"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Time (Years)</label><input id="ciT" type="number" class="edu-inp" placeholder="2"></div>
+      </div>
+      <button class="edu-btn" onclick="calcCI()">Calculate CI</button>
+      <div class="edu-result" id="ciResult" style="display:none;"></div>
+    </div>
+
+    <!-- Speed Distance Time -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(255,107,157,.1);padding:6px 10px;border-radius:6px;">🚀</span> Speed / Distance / Time</h3>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="edu-tab active" id="sdtMode" data-mode="speed" onclick="setSdtMode('speed',this)">Find Speed</button>
+        <button class="edu-tab" data-mode="dist" onclick="setSdtMode('dist',this)">Find Distance</button>
+        <button class="edu-tab" data-mode="time" onclick="setSdtMode('time',this)">Find Time</button>
+      </div>
+      <div id="sdtInputs" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"></div>
+      <button class="edu-btn" onclick="calcSDT()">Calculate</button>
+      <div class="edu-result" id="sdtResult" style="display:none;"></div>
+    </div>
+
+    <!-- Formulas -->
+    <div class="edu-tool-box">
+      <h3><span style="background:rgba(124,111,255,.1);padding:6px 10px;border-radius:6px;">📐</span> Quick Formula Reference</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;">
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Area of Circle</div><div class="edu-formula-val">A = π × r²</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Pythagorean Theorem</div><div class="edu-formula-val">a² + b² = c²</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Simple Interest</div><div class="edu-formula-val">SI = P×R×T/100</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Compound Interest</div><div class="edu-formula-val">A = P(1+r/n)ⁿᵗ</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Speed</div><div class="edu-formula-val">S = D ÷ T</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Quadratic Formula</div><div class="edu-formula-val">x = (−b ± √Δ) / 2a</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Area of Triangle</div><div class="edu-formula-val">A = ½ × b × h</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Percentage</div><div class="edu-formula-val">% = (Part/Total)×100</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Profit %</div><div class="edu-formula-val">P% = (P/CP)×100</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Average</div><div class="edu-formula-val">Avg = Sum / Count</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Ratio</div><div class="edu-formula-val">a:b = a/b</div></div>
+        <div class="edu-formula-card"><div class="edu-formula-lbl">Perimeter (Rectangle)</div><div class="edu-formula-val">P = 2(l + b)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SECTION -->
+<div id="edu-quiz" style="display:none;padding:20px 50px 60px;" class="edu-ani">
+  <div style="max-width:700px;margin:0 auto;">
+    <button class="edu-back-btn" onclick="showEduSection('home')">← Back</button>
+    <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">🎯 Daily Quiz</h2>
+    <p style="color:var(--muted);margin-bottom:28px;font-size:14px;">Maths & GK — practice చేసి score మెరుగుపరచుకోండి!</p>
+
+    <div id="quizContainer">
+      <!-- Quiz renders via JS -->
+    </div>
+  </div>
+</div>
+
+    <!-- Calculator -->
+    <div style="background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:28px;margin-bottom:20px;">
+      <h3 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:16px;">🔢 Basic Calculator</h3>
+      <input id="calcInput" type="text" placeholder="Expression enter చేయండి (e.g. 25*4+10)" style="width:100%;padding:12px 16px;background:var(--ibg);border:1px solid var(--b2);border-radius:8px;color:var(--text);font-size:15px;margin-bottom:12px;box-sizing:border-box;">
+      <div style="display:flex;gap:10px;">
+        <button onclick="calcEval()" style="flex:1;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">= Calculate</button>
+        <button onclick="document.getElementById('calcInput').value='';document.getElementById('calcResult').textContent=''" style="padding:12px 20px;background:var(--card2);border:1px solid var(--b2);color:var(--muted);border-radius:8px;cursor:pointer;">Clear</button>
+      </div>
+      <div id="calcResult" style="margin-top:14px;padding:14px;background:var(--ibg);border-radius:8px;font-size:20px;font-weight:700;color:var(--ac);min-height:50px;"></div>
+    </div>
+
+    <!-- Percentage Calculator -->
+    <div style="background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:28px;margin-bottom:20px;">
+      <h3 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:16px;">📊 Percentage Calculator</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Value</label><input id="pVal" type="number" placeholder="100" style="width:100%;padding:10px 12px;background:var(--ibg);border:1px solid var(--b2);border-radius:8px;color:var(--text);box-sizing:border-box;"></div>
+        <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Percentage %</label><input id="pPct" type="number" placeholder="25" style="width:100%;padding:10px 12px;background:var(--ibg);border:1px solid var(--b2);border-radius:8px;color:var(--text);box-sizing:border-box;"></div>
+      </div>
+      <button onclick="calcPct()" style="padding:12px 24px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Calculate %</button>
+      <div id="pctResult" style="margin-top:14px;padding:14px;background:var(--ibg);border-radius:8px;font-size:16px;font-weight:700;color:var(--ac);min-height:50px;"></div>
+    </div>
+
+<!-- RESOURCES SECTION -->
+<div id="edu-resources" style="display:none;padding:20px 50px 60px;" class="edu-ani">
+  <div style="max-width:1000px;margin:0 auto;">
+    <button class="edu-back-btn" onclick="showEduSection('home')">← Back</button>
+    <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">📚 Study Resources</h2>
+    <p style="color:var(--muted);margin-bottom:32px;font-size:14px;">Competitive exams కోసం free materials — SSC · RRB · Banks · APPSC</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
+
+      <div class="edu-res-card" style="--edu-c:var(--ac);">
+        <div style="font-size:32px;margin-bottom:14px;">📖</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">Maths Shortcuts</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Multiplication, Division, Squares — competitive exams కోసం quick tricks!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(124,111,255,.1);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;">SSC</span>
+          <span style="padding:3px 9px;background:rgba(124,111,255,.1);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;">RRB</span>
+          <span style="padding:3px 9px;background:rgba(124,111,255,.1);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;">Banks</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(124,111,255,.12);color:var(--ac);border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--bdr);">YouTube లో చూడండి →</a>
+      </div>
+
+      <div class="edu-res-card" style="--edu-c:#fbbf24;">
+        <div style="font-size:32px;margin-bottom:14px;">🔢</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">Arithmetic Tips</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Addition shortcuts, vedic maths, mental math tricks!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;">Mental Math</span>
+          <span style="padding:3px 9px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;">Speed Maths</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(251,191,36,.2);">YouTube లో చూడండి →</a>
+      </div>
+
+      <div class="edu-res-card" style="--edu-c:var(--grn);">
+        <div style="font-size:32px;margin-bottom:14px;">🌍</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">General Knowledge</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Current affairs, history, geography — exam prep కోసం!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;">Current Affairs</span>
+          <span style="padding:3px 9px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;">APPSC</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(74,222,128,.2);">YouTube లో చూడండి →</a>
+      </div>
+
+      <div class="edu-res-card" style="--edu-c:#f87171;">
+        <div style="font-size:32px;margin-bottom:14px;">🧠</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">Reasoning Skills</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Logical reasoning, number series, coding-decoding tricks!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(248,113,113,.1);color:#f87171;border-radius:40px;font-size:10px;font-weight:600;">Logical</span>
+          <span style="padding:3px 9px;background:rgba(248,113,113,.1);color:#f87171;border-radius:40px;font-size:10px;font-weight:600;">Verbal</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(248,113,113,.1);color:#f87171;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(248,113,113,.2);">YouTube లో చూడండి →</a>
+      </div>
+
+      <div class="edu-res-card" style="--edu-c:#60a5fa;">
+        <div style="font-size:32px;margin-bottom:14px;">💡</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">Tech Basics</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">Computer, internet, MS Office basics — job exams కోసం!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(96,165,250,.1);color:#60a5fa;border-radius:40px;font-size:10px;font-weight:600;">Computer</span>
+          <span style="padding:3px 9px;background:rgba(96,165,250,.1);color:#60a5fa;border-radius:40px;font-size:10px;font-weight:600;">MS Office</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(96,165,250,.1);color:#60a5fa;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(96,165,250,.2);">YouTube లో చూడండి →</a>
+      </div>
+
+      <div class="edu-res-card" style="--edu-c:#c084fc;">
+        <div style="font-size:32px;margin-bottom:14px;">📝</div>
+        <h4 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;font-size:16px;">Previous Papers</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px;">SSC, RRB, Bank exam previous year questions practice!</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <span style="padding:3px 9px;background:rgba(192,132,252,.1);color:#c084fc;border-radius:40px;font-size:10px;font-weight:600;">SSC GD</span>
+          <span style="padding:3px 9px;background:rgba(192,132,252,.1);color:#c084fc;border-radius:40px;font-size:10px;font-weight:600;">RRB NTPC</span>
+        </div>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(192,132,252,.1);color:#c084fc;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(192,132,252,.2);">YouTube లో చూడండి →</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TECH SECTION -->
+<div id="edu-tech" style="display:none;padding:20px 50px 60px;" class="edu-ani">
+  <div style="max-width:1000px;margin:0 auto;">
+    <button class="edu-back-btn" onclick="showEduSection('home')">← Back</button>
+    <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">💻 Tech Tutorials</h2>
+    <p style="color:var(--muted);margin-bottom:28px;font-size:14px;">Web design & coding roadmap — beginners నుండి advanced వరకు Telugu లో!</p>
+
+    <!-- Roadmap -->
+    <div class="edu-tool-box" style="margin-bottom:24px;">
+      <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;">🗺️ Web Developer Roadmap</h3>
+      <div class="edu-roadmap-step">
+        <div class="edu-roadmap-num">1</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:3px;">HTML Basics <span style="padding:2px 8px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;margin-left:6px;">Beginner</span></div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Tags, structure, forms, tables — website skeleton నేర్చుకోండి</div>
+        </div>
+      </div>
+      <div class="edu-roadmap-step">
+        <div class="edu-roadmap-num">2</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:3px;">CSS Styling <span style="padding:2px 8px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;margin-left:6px;">Beginner</span></div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Colors, fonts, flexbox, grid, animations — website beautiful గా చేయండి</div>
+        </div>
+      </div>
+      <div class="edu-roadmap-step">
+        <div class="edu-roadmap-num">3</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:3px;">JavaScript <span style="padding:2px 8px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;margin-left:6px;">Intermediate</span></div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Functions, DOM, events, APIs — website interactive గా చేయండి</div>
+        </div>
+      </div>
+      <div class="edu-roadmap-step">
+        <div class="edu-roadmap-num">4</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:3px;">React JS <span style="padding:2px 8px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;margin-left:6px;">Intermediate</span></div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Components, state, hooks — modern web apps build చేయండి</div>
+        </div>
+      </div>
+      <div class="edu-roadmap-step">
+        <div class="edu-roadmap-num">5</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:3px;">Full Stack (Node.js) <span style="padding:2px 8px;background:rgba(124,111,255,.12);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;margin-left:6px;">Advanced</span></div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Backend, databases, APIs — complete web developer అవ్వండి</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tech Topic Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <div class="edu-res-card" style="--edu-c:#e34c26;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">🌐</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">HTML Basics</h4>
+            <span style="padding:2px 8px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;">Beginner</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Website create చేయడం నేర్చుకోండి — zero to hero! Tags, forms, links అన్నీ.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(227,76,38,.12);color:#e34c26;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+      <div class="edu-res-card" style="--edu-c:#264de4;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">🎨</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">CSS Styling</h4>
+            <span style="padding:2px 8px;background:rgba(74,222,128,.1);color:var(--grn);border-radius:40px;font-size:10px;font-weight:600;">Beginner</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Beautiful designs చేయడం నేర్చుకోండి! Flexbox, Grid, Animations.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(38,77,228,.12);color:#264de4;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+      <div class="edu-res-card" style="--edu-c:#f7df1e;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">⚡</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">JavaScript</h4>
+            <span style="padding:2px 8px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;">Intermediate</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Interactive websites build చేయండి! Variables, functions, DOM.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(247,223,30,.12);color:#b8a800;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+      <div class="edu-res-card" style="--edu-c:#61dafb;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">⚛️</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">React JS</h4>
+            <span style="padding:2px 8px;background:rgba(251,191,36,.1);color:var(--ylw);border-radius:40px;font-size:10px;font-weight:600;">Intermediate</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Modern web apps build చేయండి! Components, hooks, state.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(97,218,251,.12);color:#61dafb;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+      <div class="edu-res-card" style="--edu-c:#68a063;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">🟢</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">Node.js</h4>
+            <span style="padding:2px 8px;background:rgba(124,111,255,.12);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;">Advanced</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Backend development నేర్చుకోండి! APIs, servers, databases.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(104,160,99,.12);color:#68a063;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+      <div class="edu-res-card" style="--edu-c:#336791;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:28px;">🗄️</div>
+          <div>
+            <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">Databases (SQL)</h4>
+            <span style="padding:2px 8px;background:rgba(124,111,255,.12);color:var(--ac);border-radius:40px;font-size:10px;font-weight:600;">Advanced</span>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:14px;">Data store చేయడం నేర్చుకోండి! MySQL, PostgreSQL basics.</p>
+        <a href="https://www.youtube.com/@AnilEduTechYT" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 15px;background:rgba(51,103,145,.12);color:#336791;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Watch Tutorial →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<!-- ===== END EDUTECH PAGE ===== -->
+
 </body>
 </html>
+
